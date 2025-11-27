@@ -1,0 +1,8 @@
+{
+  "name": "TattvaAI Pro",
+  "description": "A production-ready SaaS dashboard for AI tools featuring text summarization, vision processing, and gamification, powered by local mock AI services.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
