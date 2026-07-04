@@ -1,7 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { UserRole, ToolType } from "../types";
+import { UserRole } from "../types";
 import type { UserProfile, HistoryItem } from "../types";
+
+
 
 
 // ⭐ Local Badge type
@@ -47,12 +49,15 @@ export const AppProvider = ({ children }: { children?: ReactNode }) => {
 
   // Load theme on start
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark";
+    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
     if (savedTheme) {
-      setTheme(savedTheme);
+      // Keep state update async to avoid react-hooks/set-state-in-effect warning.
+      queueMicrotask(() => setTheme(savedTheme));
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
     }
   }, []);
+
+
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";

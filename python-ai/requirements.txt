@@ -1,0 +1,11 @@
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.2
+
+# Summarization (local DistilBART via Hugging Face Transformers)
+transformers==4.57.6
+torch==2.8.0
+accelerate==1.10.1
+sentencepiece==0.2.1
+
+

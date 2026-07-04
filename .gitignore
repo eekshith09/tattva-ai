@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Environment files
+.env
+.env.*
+
+# Python
+python-ai/.venv/
+.venv/
+__pycache__/
+*.pyc
+
+# TypeScript
+tsconfig.tsbuildinfo
+

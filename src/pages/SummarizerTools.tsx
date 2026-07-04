@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Card, Button, LoadingSkeleton } from '../components/Common';
-import { mockSummarizeText, mockYouTubeSummary, mockChatQuery } from '../services/mockAI';
+import { mockYouTubeSummary, mockChatQuery } from '../services/mockAI';
 import { ToolType } from '../types';
 import { Copy, Check, Video, MessageSquare } from 'lucide-react';
 
@@ -16,16 +16,39 @@ export const TextSummarizer = () => {
     if (!text) return;
     setLoading(true);
     try {
-      const result = await mockSummarizeText(text);
-      setSummary(result);
+      const resp = await fetch('/api/summarize/text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      const data = await resp.json().catch(() => null);
+
+      if (!resp.ok) {
+        const msg =
+          (data && (data.error || data.message)) ||
+          (data && data.detail && data.detail.error) ||
+          `Request failed with status ${resp.status}`;
+        showToast(msg, 'error');
+        return;
+      }
+
+      const serverSummary = data?.summary ?? '';
+      setSummary(serverSummary);
+
       addHistoryItem({
         type: ToolType.TEXT_SUMMARIZER,
         title: `Summary: ${text.substring(0, 20)}...`,
-        summary: result
+        summary: serverSummary,
       });
       showToast('Summary generated successfully!');
-    } catch (err) {
+    } catch (error: unknown) {
       showToast('Error generating summary', 'error');
+      if (error instanceof Error) {
+        // keep detailed info only in console to avoid UI changes
+        // eslint-disable-next-line no-console
+        console.error(error);
+      }
     } finally {
       setLoading(false);
     }
@@ -63,7 +86,7 @@ export const TextSummarizer = () => {
         <Card className="relative">
           <div className="absolute top-4 right-4">
             {summary && (
-              <button 
+              <button
                 onClick={handleCopy}
                 className="p-2 text-slate-500 hover:text-purple-600 transition-colors"
                 title="Copy to clipboard"
@@ -72,19 +95,15 @@ export const TextSummarizer = () => {
               </button>
             )}
           </div>
-          
+
           <h3 className="font-semibold mb-4 text-slate-700 dark:text-slate-300">AI Output</h3>
-          
+
           {loading ? (
             <LoadingSkeleton rows={6} />
           ) : summary ? (
-            <div className="prose dark:prose-invert text-sm max-w-none whitespace-pre-line">
-              {summary}
-            </div>
+            <div className="prose dark:prose-invert text-sm max-w-none whitespace-pre-line">{summary}</div>
           ) : (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm italic">
-              Output will appear here...
-            </div>
+            <div className="h-full flex items-center justify-center text-slate-400 text-sm italic">Output will appear here...</div>
           )}
         </Card>
       </div>
@@ -110,10 +129,10 @@ export const YouTubeSummarizer = () => {
       addHistoryItem({
         type: ToolType.YOUTUBE_SUMMARIZER,
         title: res.title,
-        summary: res.summary
+        summary: res.summary,
       });
       showToast('Video processed successfully!');
-    } catch (e) {
+    } catch {
       showToast('Invalid YouTube URL', 'error');
     } finally {
       setLoading(false);
@@ -126,7 +145,7 @@ export const YouTubeSummarizer = () => {
     const ans = await mockChatQuery(chatQuery);
     setChatResponse(ans);
     setChatLoading(false);
-  }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -136,7 +155,7 @@ export const YouTubeSummarizer = () => {
         </div>
         <h2 className="text-3xl font-bold">YouTube Summarizer</h2>
         <p className="text-slate-500">Get summaries, key takeaways, and chat with any video instantly.</p>
-        
+
         <div className="flex gap-2 relative">
           <input
             type="text"
@@ -165,7 +184,7 @@ export const YouTubeSummarizer = () => {
             <Card>
               <h3 className="text-xl font-bold mb-3">{result.title}</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">{result.summary}</p>
-              
+
               <h4 className="font-semibold text-sm uppercase tracking-wider text-slate-500 mb-3">Key Learnings</h4>
               <ul className="space-y-2">
                 {result.keyLearnings.map((point, i) => (
@@ -208,3 +227,4 @@ export const YouTubeSummarizer = () => {
     </div>
   );
 };
+
